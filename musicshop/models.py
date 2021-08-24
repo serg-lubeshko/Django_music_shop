@@ -1,3 +1,4 @@
+from django.contrib.contenttypes.models import ContentType
 from django.db import models
 
 
@@ -87,11 +88,51 @@ class Album(models.Model):
         verbose_name = "Альбом"
         verbose_name_plural = "Альбомы"
 
-    class CartProduct(models.Model):
-        """
-        Промежуточный продукт корзины
-        """
 
+class CartProduct(models.Model):
+    """
+    Промежуточный продукт корзины
+    """
     user = models.ForeignKey("Custumer", verbose_name="Покупатель", on_delete=models.CASCADE)
     cart = models.ForeignKey("Cart", verbose_name="Корзина", on_delete=models.CASCADE)
-    
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    object_id = models.PositiveIntegerField()
+    content_object = models.GenericForeignKey('content_type', 'object_id')
+    quantity = models.PositiveIntegerField(default=1)
+    final_price = models.DecimalField(max_digits=9, decimal_places=2, verbose_name="Общая цена")
+
+    def __str__(self):
+        return f"Продукт {self.content_object.name} для коорзины"
+
+    def save(self, *args, **kargs):
+        self.final_price = self.quantity * self.content_object.price
+        super().save(*args, **kargs)  # Не делаем return иначе максимум рекурсии
+
+    class Meta:
+        verbose_name = "Продукт корзины"
+        verbose_name_plural = "Продукты корзины"
+
+
+class Cart(models.Model):
+    """
+    Корзина
+    """
+    owner = models.ForeignKey("Custumer", verbose_name="Покупатель", on_delete=models.CASCADE)
+    products = models.ManyToManyField(
+        CartProduct,
+        blank=True,
+        null=True,
+        related_name="related_cart",
+        verbose_name="Продукты для корзины"
+    )
+    total_products = models.IntegerField(default=0, verbose_name="Общее количество товара")
+    final_price = models.DecimalField(max_digits=9, decimal_places=2, verbose_name="Общая цена")
+    in_order = models.BooleanField(default=False)
+    for_anonymous_user = models.BooleanField(default=False)
+
+    def __str__(self):
+        return str(self.id)
+
+    class Meta:
+        verbose_name = "Корзина"
+        verbose_name_plural = "Корзины"
