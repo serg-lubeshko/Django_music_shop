@@ -136,3 +136,37 @@ class Cart(models.Model):
     class Meta:
         verbose_name = "Корзина"
         verbose_name_plural = "Корзины"
+
+
+class Order(models.Model):
+    '''
+    Заказ пользователя
+    '''
+
+    STATUS_NEW = 'new'
+    STATUS_IN_PROGRESS = 'in_progress'
+    STATUS_READY = 'is_ready'
+    STATUS_COMPLETED = 'completed'
+
+    BYING_TYPE_SELF = 'self'
+    BUYING_TYPE_DELIVERY = 'delivery'
+
+    STATUS_CHOICES = (
+        (STATUS_NEW, 'Новый заказ'),
+        (STATUS_IN_PROGRESS, 'Заказ в обработке'),
+        (STATUS_READY, 'Заказ готов'),
+        (STATUS_COMPLETED, 'Заказ получен покупателем')
+    )
+
+    BUYING_TYPE_CHOICES = (
+        (BYING_TYPE_SELF, 'Самовывоз'),
+        (BUYING_TYPE_DELIVERY, 'Доставка')
+
+    )
+
+    costumer = models.ForeignKey(
+        'Customer',
+        verbose_name="Покупатель",
+        related_name='order_costumer',
+        on_delete=models.CASCADE
+    )  # orders
